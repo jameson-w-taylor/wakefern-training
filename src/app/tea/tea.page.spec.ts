@@ -3,9 +3,13 @@ import { ComponentFixture, TestBed, fakeAsync, tick, waitForAsync } from '@angul
 import { By } from '@angular/platform-browser';
 import { TeaPage } from './tea.page';
 import { Tea } from '@app/models';
-import { AuthenticationService, SessionVaultService } from '@app/core';
+import { AuthenticationService, SessionVaultService, TeaService } from '@app/core';
 import { NavController } from '@ionic/angular';
-import { createAuthenticationServiceMock, createSessionVaultServiceMock } from '@app/core/testing';
+import {
+  createAuthenticationServiceMock,
+  createSessionVaultServiceMock,
+  createTeaServiceMock,
+} from '@app/core/testing';
 import { createNavControllerMock } from '@test/mocks';
 import { of } from 'rxjs';
 
@@ -63,28 +67,22 @@ describe('TeaPage', () => {
         description:
           'An aged black tea from china. Puer teas have a strong rich flavor that could be described as "woody" or "peaty."',
       },
-      {
-        id: 7,
-        name: 'White',
-        image: 'assets/img/white.jpg',
-        description:
-          'White tea is produced using very young shoots with no oxidation process. White tea has an extremely ' +
-          'delicate flavor that is sweet and fragrent. White tea should be steeped at lower temperatures for ' +
-          'short periods of time.',
-      },
     ];
   };
 
   beforeEach(waitForAsync(() => {
+    initializeTestData();
     TestBed.configureTestingModule({
       imports: [TeaPage],
     })
       .overrideProvider(AuthenticationService, { useFactory: createAuthenticationServiceMock })
       .overrideProvider(NavController, { useFactory: createNavControllerMock })
       .overrideProvider(SessionVaultService, { useFactory: createSessionVaultServiceMock })
+      .overrideProvider(TeaService, { useFactory: createTeaServiceMock })
       .compileComponents();
 
-    initializeTestData();
+    const tea = TestBed.inject(TeaService);
+    (tea.getAll as jasmine.Spy).and.returnValue(of(teas));
     fixture = TestBed.createComponent(TeaPage);
     component = fixture.componentInstance;
     fixture.detectChanges();
@@ -100,7 +98,7 @@ describe('TeaPage', () => {
     expect(titles[1].nativeElement.textContent.trim()).toBe('Teas');
   });
 
-  describe('a grid of seven teas', () => {
+  describe('a grid of six teas', () => {
     let grid: DebugElement;
     beforeEach(() => {
       grid = fixture.debugElement.query(By.css('ion-grid'));
@@ -117,15 +115,15 @@ describe('TeaPage', () => {
       expect(cols.length).toBe(4);
     });
 
-    it('has three columns in the second row', () => {
+    it('has two columns in the second row', () => {
       const rows = grid.queryAll(By.css('ion-row'));
       const cols = rows[1].queryAll(By.css('ion-col'));
-      expect(cols.length).toBe(3);
+      expect(cols.length).toBe(2);
     });
 
     it('binds the card title to the tea name', () => {
       const cols = grid.queryAll(By.css('ion-col'));
-      expect(cols.length).toBe(7);
+      expect(cols.length).toBe(6);
       cols.forEach((col, idx) => {
         const title = col.query(By.css('ion-card-title'));
         expect(title.nativeElement.textContent.trim()).toBe(teas[idx].name);
@@ -134,7 +132,7 @@ describe('TeaPage', () => {
 
     it('binds the card content to the tea description', () => {
       const cols = grid.queryAll(By.css('ion-col'));
-      expect(cols.length).toBe(7);
+      expect(cols.length).toBe(6);
       cols.forEach((col, idx) => {
         const title = col.query(By.css('ion-card-content'));
         expect(title.nativeElement.textContent.trim()).toBe(teas[idx].description);

@@ -2,6 +2,12 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
+    "paths": {
+      "@app/*": ["src/app/*"],
+      "@env/*": ["src/environments/*"],
+      "@test/*": ["test/*"],
+      "@capacitor/*": ["__mocks__/@capacitor/*"]
+    },
     "outDir": "./out-tsc/spec",
     "types": ["jasmine"]
   },

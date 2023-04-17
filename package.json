@@ -9,6 +9,8 @@
     "build": "ng build --configuration production && cap sync",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
+    "test:ci": "ng test --no-watch",
+    "test:debug": "ng test --browsers=Chrome",
     "lint": "ng lint",
     "prepare": "husky install",
     "assets": "capacitor-assets generate --iconBackgroundColor '#f1ebe1' --splashBackgroundColor '#f1ebe1' --iconBackgroundColorDark '#110b00' --splashBackgroundColorDark '#110b00'"

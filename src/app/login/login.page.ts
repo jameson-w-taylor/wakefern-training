@@ -1,7 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { IonicModule } from '@ionic/angular';
+import { IonicModule, NavController } from '@ionic/angular';
+import { AuthenticationService, SessionVaultService } from '@app/core';
+import { take, tap } from 'rxjs';
 
 @Component({
   selector: 'app-login',
@@ -11,6 +13,7 @@ import { IonicModule } from '@ionic/angular';
   imports: [IonicModule, CommonModule, ReactiveFormsModule],
 })
 export class LoginPage implements OnInit {
+  loginFailed: boolean = false;
   loginForm = this.fb.group({
     email: ['', [Validators.email, Validators.required]],
     password: ['', Validators.required],
@@ -26,11 +29,30 @@ export class LoginPage implements OnInit {
     return password.errors?.['required'] ? 'Required' : 'Valid';
   }
 
-  constructor(private fb: FormBuilder) {}
+  constructor(
+    private fb: FormBuilder,
+    private auth: AuthenticationService,
+    private nav: NavController,
+    private sessionVault: SessionVaultService
+  ) {}
 
   ngOnInit() {}
 
   signIn() {
-    console.log(this.loginForm.controls.email.value, this.loginForm.controls.password.value);
+    const controls = this.loginForm.controls;
+    this.auth
+      .login(controls.email.value as string, controls.password.value as string)
+      .pipe(
+        take(1),
+        tap(async (session) => {
+          if (session) {
+            await this.sessionVault.set(session);
+            this.nav.navigateRoot(['/']);
+          } else {
+            this.loginFailed = true;
+          }
+        })
+      )
+      .subscribe();
   }
 }

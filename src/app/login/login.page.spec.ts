@@ -1,12 +1,26 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { LoginPage } from './login.page';
+import { AuthenticationService, SessionVaultService } from '@app/core';
+import { NavController } from '@ionic/angular';
+import { of } from 'rxjs';
+import { Session } from '@app/models';
+import { createAuthenticationServiceMock, createSessionVaultServiceMock } from '@app/core/testing';
+import { createNavControllerMock } from '@test/mocks';
 
 describe('LoginPage', () => {
   let component: LoginPage;
   let fixture: ComponentFixture<LoginPage>;
 
   beforeEach(async () => {
+    TestBed.configureTestingModule({
+      imports: [LoginPage],
+    })
+      .overrideProvider(AuthenticationService, { useFactory: createAuthenticationServiceMock })
+      .overrideProvider(SessionVaultService, { useFactory: createSessionVaultServiceMock })
+      .overrideProvider(NavController, { useFactory: createNavControllerMock })
+      .compileComponents();
+
     fixture = TestBed.createComponent(LoginPage);
     component = fixture.componentInstance;
     fixture.detectChanges();
@@ -109,7 +123,64 @@ describe('LoginPage', () => {
       setInputValue(password, 'MyPas$W0rd');
       expect(button.disabled).toEqual(true);
     });
+
+    describe('on click', () => {
+      let auth: AuthenticationService;
+
+      beforeEach(() => {
+        auth = TestBed.inject(AuthenticationService);
+      });
+
+      it('calls the login', () => {
+        setInputValue(email, 'test@test.com');
+        setInputValue(password, 'ThisIsMyPa$$W0rd');
+        click(button);
+        expect(auth.login).toHaveBeenCalledTimes(1);
+        expect(auth.login).toHaveBeenCalledWith('test@test.com', 'ThisIsMyPa$$W0rd');
+      });
+
+      describe('on success', () => {
+        const session: Session = {
+          user: {
+            id: 314,
+            firstName: 'Kevin',
+            lastName: 'Minion',
+            email: 'goodtobebad@gru.org',
+          },
+          token: '39948503',
+        };
+
+        beforeEach(() => {
+          (auth.login as jasmine.Spy).and.returnValue(of(session));
+        });
+
+        it('stores the session', () => {
+          const sessionVault = TestBed.inject(SessionVaultService);
+          setInputValue(email, 'test@test.com');
+          setInputValue(password, 'ThisIsMyPa$$W0rd');
+          click(button);
+          expect(sessionVault.set).toHaveBeenCalledTimes(1);
+          expect(sessionVault.set).toHaveBeenCalledWith(session);
+        });
+
+        it('navigates to the main page', fakeAsync(() => {
+          const nav = TestBed.inject(NavController);
+          setInputValue(email, 'test@test.com');
+          setInputValue(password, 'ThisIsMyPa$$W0rd');
+          click(button);
+          tick();
+          expect(nav.navigateRoot).toHaveBeenCalledTimes(1);
+          expect(nav.navigateRoot).toHaveBeenCalledWith(['/']);
+        }));
+      });
+    });
   });
+
+  const click = (button: HTMLElement) => {
+    const event = new Event('click');
+    button.dispatchEvent(event);
+    fixture.detectChanges();
+  };
 
   const setInputValue = (input: HTMLIonInputElement, value: string) => {
     const event = new InputEvent('ionInput');

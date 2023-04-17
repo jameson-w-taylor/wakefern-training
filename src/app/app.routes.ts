@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { authGuard } from '@app/core';
 
 export const routes: Routes = [
   {
@@ -9,6 +10,7 @@ export const routes: Routes = [
   {
     path: 'tea',
     loadComponent: () => import('./tea/tea.page').then((m) => m.TeaPage),
+    canActivate: [authGuard],
   },
   {
     path: 'login',

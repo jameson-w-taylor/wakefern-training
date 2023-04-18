@@ -5,6 +5,11 @@ const config: CapacitorConfig = {
   appName: 'Tea Taster',
   webDir: 'www',
   bundledWebRuntime: false,
+  plugins: {
+    SplashScreen: {
+      launchAutoHide: false,
+    },
+  },
 };
 
 export default config;

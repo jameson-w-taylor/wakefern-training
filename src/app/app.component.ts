@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { SplashScreen } from '@capacitor/splash-screen';
 import { IonicModule } from '@ionic/angular';
 
 @Component({
@@ -8,6 +9,10 @@ import { IonicModule } from '@ionic/angular';
   standalone: true,
   imports: [IonicModule],
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   constructor() {}
+
+  ngOnInit() {
+    SplashScreen.hide();
+  }
 }

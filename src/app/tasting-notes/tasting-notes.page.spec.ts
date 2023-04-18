@@ -3,7 +3,7 @@ import { By } from '@angular/platform-browser';
 import { TastingNotesService } from '@app/core';
 import { createTastingNotesServiceMock } from '@app/core/testing';
 import { TastingNote } from '@app/models';
-import { IonRouterOutlet, IonicModule, ModalController } from '@ionic/angular';
+import { AlertController, IonRouterOutlet, IonicModule, ModalController } from '@ionic/angular';
 import { of } from 'rxjs';
 import { TastingNotesPage } from './tasting-notes.page';
 import { createOverlayControllerMock, createOverlayElementMock } from '@test/mocks';
@@ -12,6 +12,8 @@ import { TastingNoteEditorComponent } from './tasting-note-editor/tasting-note-e
 describe('TastingNotesPage', () => {
   let component: TastingNotesPage;
   let fixture: ComponentFixture<TastingNotesPage>;
+  let alert: HTMLIonAlertElement;
+  let alertController: AlertController;
   let modal: HTMLIonModalElement;
   let modalController: ModalController;
   let testData: Array<TastingNote>;
@@ -22,11 +24,14 @@ describe('TastingNotesPage', () => {
 
   beforeEach(waitForAsync(() => {
     initializeTestData();
+    alert = createOverlayElementMock('Alert');
     modal = createOverlayElementMock('Modal');
+    alertController = createOverlayControllerMock('AlertController', alert);
     modalController = createOverlayControllerMock('ModalController', modal);
     TestBed.configureTestingModule({
       imports: [TastingNotesPage],
     })
+      .overrideProvider(AlertController, { useFactory: () => createOverlayControllerMock('AlertController', alert) })
       .overrideProvider(ModalController, { useValue: modalController })
       .overrideProvider(IonRouterOutlet, { useValue: mockRouterOutlet })
       .overrideProvider(TastingNotesService, { useFactory: createTastingNotesServiceMock })
@@ -103,16 +108,30 @@ describe('TastingNotesPage', () => {
     beforeEach(async () => {
       fixture.detectChanges();
       await fixture.whenRenderingDone();
+      (alert.onDidDismiss as jasmine.Spy).and.resolveTo({ role: 'yes' });
     });
 
-    it('removes the note', fakeAsync(() => {
-      const notes = TestBed.inject(TastingNotesService);
+    it('asks the user if they would like to remove the note', fakeAsync(() => {
       const buttons = fixture.debugElement.queryAll(By.css('ion-item-option'));
       click(buttons[1].nativeElement);
       tick();
-      expect(notes.delete).toHaveBeenCalledTimes(1);
-      expect(notes.delete).toHaveBeenCalledWith(42);
+      expect(alert.present).toHaveBeenCalledTimes(1);
     }));
+
+    describe('when the user answers yes', () => {
+      beforeEach(() => {
+        (alert.onDidDismiss as jasmine.Spy).and.resolveTo({ role: 'yes' });
+      });
+
+      it('removes the note', fakeAsync(() => {
+        const notes = TestBed.inject(TastingNotesService);
+        const buttons = fixture.debugElement.queryAll(By.css('ion-item-option'));
+        click(buttons[1].nativeElement);
+        tick();
+        expect(notes.delete).toHaveBeenCalledTimes(1);
+        expect(notes.delete).toHaveBeenCalledWith(42);
+      }));
+    });
   });
 
   const click = (button: HTMLElement) => {

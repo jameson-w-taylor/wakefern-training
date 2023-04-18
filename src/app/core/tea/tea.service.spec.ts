@@ -80,6 +80,24 @@ describe('TeaService', () => {
     expect(service).toBeTruthy();
   });
 
+  describe('get', () => {
+    it('gets the tea category', () => {
+      service.get(3).subscribe();
+      const req = httpTestingController.expectOne(`${environment.dataService}/tea-categories/3`);
+      expect(req.request.method).toEqual('GET');
+      httpTestingController.verify();
+    });
+
+    it('adds an image', () => {
+      let tea: Tea = expectedTeas[0];
+      service.get(3).subscribe((t) => (tea = t));
+      const req = httpTestingController.expectOne(`${environment.dataService}/tea-categories/3`);
+      req.flush(resultTeas[2]);
+      httpTestingController.verify();
+      expect(tea).toEqual(expectedTeas[2]);
+    });
+  });
+
   describe('get all', () => {
     it('gets the tea categories', () => {
       service.getAll().subscribe();

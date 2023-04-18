@@ -14,6 +14,12 @@ export class TeaService {
 
   constructor(private http: HttpClient) {}
 
+  get(id: number): Observable<Tea> {
+    return this.http
+      .get<TeaResponse>(`${environment.dataService}/tea-categories/${id}`)
+      .pipe(map((tea) => this.convert(tea)));
+  }
+
   getAll(): Observable<Array<Tea>> {
     return this.http
       .get<Array<TeaResponse>>(`${environment.dataService}/tea-categories`)

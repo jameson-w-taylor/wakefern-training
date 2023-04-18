@@ -28,6 +28,10 @@ export class TeaPage implements OnInit {
     this.teaMatrix$ = this.tea.getAll().pipe(map((teas) => this.toMatrix(teas)));
   }
 
+  showDetailsPage(id: number) {
+    this.nav.navigateForward(['tea-details', id]);
+  }
+
   logout() {
     this.auth
       .logout()

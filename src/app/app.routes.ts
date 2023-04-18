@@ -8,12 +8,17 @@ export const routes: Routes = [
     pathMatch: 'full',
   },
   {
+    path: 'login',
+    loadComponent: () => import('./login/login.page').then((m) => m.LoginPage),
+  },
+  {
     path: 'tea',
     loadComponent: () => import('./tea/tea.page').then((m) => m.TeaPage),
     canActivate: [authGuard],
   },
   {
-    path: 'login',
-    loadComponent: () => import('./login/login.page').then((m) => m.LoginPage),
+    path: 'tea-details/:id',
+    loadComponent: () => import('./tea-details/tea-details.page').then((m) => m.TeaDetailsPage),
+    canActivate: [authGuard],
   },
 ];

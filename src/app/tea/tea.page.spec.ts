@@ -172,6 +172,28 @@ describe('TeaPage', () => {
     });
   });
 
+  describe('show details page', () => {
+    let card: HTMLElement;
+    beforeEach(() => {
+      const grid = fixture.debugElement.query(By.css('ion-grid'));
+      const rows = grid.queryAll(By.css('ion-row'));
+      const cols = rows[0].queryAll(By.css('ion-col'));
+      card = cols[2].query(By.css('ion-card')).nativeElement;
+    });
+
+    it('navigates forward', () => {
+      const navController = TestBed.inject(NavController);
+      click(card);
+      expect(navController.navigateForward).toHaveBeenCalledTimes(1);
+    });
+
+    it('passes the details page and the ID', () => {
+      const navController = TestBed.inject(NavController);
+      click(card);
+      expect(navController.navigateForward).toHaveBeenCalledWith(['tea-details', teas[2].id]);
+    });
+  });
+
   const click = (button: HTMLElement) => {
     const event = new Event('click');
     button.dispatchEvent(event);

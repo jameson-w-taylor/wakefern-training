@@ -4,7 +4,8 @@ import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angu
 import { TastingNotesService, TeaService } from '@app/core';
 import { TastingNote, Tea } from '@app/models';
 import { RatingComponent } from '@app/shared';
-import { IonicModule, ModalController } from '@ionic/angular';
+import { Share } from '@capacitor/share';
+import { IonicModule, ModalController, Platform } from '@ionic/angular';
 import { Observable, of, tap } from 'rxjs';
 
 @Component({
@@ -17,6 +18,18 @@ import { Observable, of, tap } from 'rxjs';
 export class TastingNoteEditorComponent implements OnInit {
   @Input()
   note: TastingNote | undefined;
+
+  get sharingIsAvailable(): boolean {
+    return this.platform.is('hybrid');
+  }
+
+  get allowSharing(): boolean {
+    return !!(
+      this.editorForm.controls.brand.value &&
+      this.editorForm.controls.name.value &&
+      this.editorForm.controls.rating.value
+    );
+  }
 
   editorForm = this.fb.group({
     brand: ['', Validators.required],
@@ -33,11 +46,21 @@ export class TastingNoteEditorComponent implements OnInit {
     private fb: FormBuilder,
     private modalController: ModalController,
     private tastingNotes: TastingNotesService,
-    private tea: TeaService
+    private tea: TeaService,
+    private platform: Platform
   ) {}
 
   close() {
     this.modalController.dismiss();
+  }
+
+  async share(): Promise<void> {
+    await Share.share({
+      title: `${this.editorForm.controls.brand.value}: ${this.editorForm.controls.name.value}`,
+      text: `I gave ${this.editorForm.controls.brand.value}: ${this.editorForm.controls.name.value} ${this.editorForm.controls.rating.value} stars on the Tea Taster app`,
+      dialogTitle: 'Share your tasting note',
+      url: 'https://tea-taster-training.web.app',
+    });
   }
 
   async save() {

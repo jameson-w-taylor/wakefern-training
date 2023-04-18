@@ -2,16 +2,18 @@ import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { TastingNotesService, TeaService } from '@app/core';
 import { createTastingNotesServiceMock, createTeaServiceMock } from '@app/core/testing';
-import { IonicModule, ModalController } from '@ionic/angular';
-import { createOverlayControllerMock } from '@test/mocks';
+import { ModalController, Platform } from '@ionic/angular';
+import { createOverlayControllerMock, createPlatformMock } from '@test/mocks';
 import { of } from 'rxjs';
 
 import { TastingNoteEditorComponent } from './tasting-note-editor.component';
+import { Share } from '@capacitor/share';
 
 describe('TastingNoteEditorComponent', () => {
   let component: TastingNoteEditorComponent;
   let fixture: ComponentFixture<TastingNoteEditorComponent>;
   let modalController: ModalController;
+  let platform: Platform;
 
   const click = (button: HTMLElement) => {
     const event = new Event('click');
@@ -21,12 +23,14 @@ describe('TastingNoteEditorComponent', () => {
 
   beforeEach(waitForAsync(() => {
     modalController = createOverlayControllerMock('ModalController');
+    platform = createPlatformMock();
     TestBed.configureTestingModule({
       imports: [TastingNoteEditorComponent],
     })
       .overrideProvider(TastingNotesService, { useFactory: createTastingNotesServiceMock })
       .overrideProvider(TeaService, { useFactory: createTeaServiceMock })
       .overrideProvider(ModalController, { useValue: modalController })
+      .overrideProvider(Platform, { useValue: platform })
       .compileComponents();
 
     fixture = TestBed.createComponent(TastingNoteEditorComponent);
@@ -217,6 +221,68 @@ describe('TastingNoteEditorComponent', () => {
       const btn = fixture.debugElement.query(By.css('[data-testid="cancel-button"]'));
       click(btn.nativeElement);
       expect(modalController.dismiss).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('share', () => {
+    describe('in a web context', () => {
+      beforeEach(() => {
+        (platform.is as any).withArgs('hybrid').and.returnValue(false);
+        fixture.detectChanges();
+      });
+
+      it('is not available', () => {
+        expect(fixture.debugElement.query(By.css('[data-testid="share-button"]'))).toBeFalsy();
+      });
+    });
+
+    describe('in a mobile context', () => {
+      beforeEach(() => {
+        (platform.is as any).withArgs('hybrid').and.returnValue(true);
+        fixture.detectChanges();
+      });
+
+      it('is available', () => {
+        expect(fixture.debugElement.query(By.css('[data-testid="share-button"]'))).toBeTruthy();
+      });
+
+      it('is not allowed until a brand, name, and rating have all been entered', () => {
+        const button = fixture.debugElement.query(By.css('[data-testid="share-button"]'));
+        expect(button.nativeElement.disabled).toBeTrue();
+
+        component.editorForm.controls.brand.setValue('Lipton');
+        fixture.detectChanges();
+        expect(button.nativeElement.disabled).toBeTrue();
+
+        component.editorForm.controls.name.setValue('Yellow Label');
+        fixture.detectChanges();
+        expect(button.nativeElement.disabled).toBeTrue();
+
+        component.editorForm.controls.rating.setValue(2);
+        fixture.detectChanges();
+        expect(button.nativeElement.disabled).toBeFalse();
+      });
+
+      it('calls the share plugin when clicked', async () => {
+        spyOn(Share, 'share');
+        const button = fixture.debugElement.query(By.css('[data-testid="share-button"]'));
+
+        component.editorForm.controls.brand.setValue('Lipton');
+        component.editorForm.controls.name.setValue('Yellow Label');
+        component.editorForm.controls.rating.setValue(2);
+
+        const event = new Event('click');
+        button.nativeElement.dispatchEvent(event);
+        fixture.detectChanges();
+
+        expect(Share.share).toHaveBeenCalledTimes(1);
+        expect(Share.share).toHaveBeenCalledWith({
+          title: 'Lipton: Yellow Label',
+          text: 'I gave Lipton: Yellow Label 2 stars on the Tea Taster app',
+          dialogTitle: 'Share your tasting note',
+          url: 'https://tea-taster-training.web.app',
+        });
+      });
     });
   });
 });

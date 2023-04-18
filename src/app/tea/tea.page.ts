@@ -29,7 +29,7 @@ export class TeaPage implements OnInit {
   }
 
   showDetailsPage(id: number) {
-    this.nav.navigateForward(['tea-details', id]);
+    this.nav.navigateForward(['tabs', 'tea', 'tea-details', id]);
   }
 
   logout() {

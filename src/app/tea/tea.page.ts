@@ -1,11 +1,11 @@
 import { Component, OnInit } from '@angular/core';
-import { AuthenticationService, SessionVaultService, TeaService } from '@app/core';
+import { TeaService } from '@app/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { Tea } from '@app/models';
 import { NavController } from '@ionic/angular';
-import { Observable, map, of, tap } from 'rxjs';
+import { Observable, map, of } from 'rxjs';
 
 @Component({
   selector: 'app-tea',
@@ -17,12 +17,7 @@ import { Observable, map, of, tap } from 'rxjs';
 export class TeaPage implements OnInit {
   teaMatrix$: Observable<Array<Array<Tea>>> = of([]);
 
-  constructor(
-    private auth: AuthenticationService,
-    private nav: NavController,
-    private sessionVault: SessionVaultService,
-    private tea: TeaService
-  ) {}
+  constructor(private nav: NavController, private tea: TeaService) {}
 
   ngOnInit() {
     this.teaMatrix$ = this.tea.getAll().pipe(map((teas) => this.toMatrix(teas)));
@@ -30,18 +25,6 @@ export class TeaPage implements OnInit {
 
   showDetailsPage(id: number) {
     this.nav.navigateForward(['tabs', 'tea', 'tea-details', id]);
-  }
-
-  logout() {
-    this.auth
-      .logout()
-      .pipe(
-        tap(async () => {
-          await this.sessionVault.clear();
-          this.nav.navigateRoot(['/', 'login']);
-        })
-      )
-      .subscribe();
   }
 
   private toMatrix(tea: Array<Tea>): Array<Array<Tea>> {

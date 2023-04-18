@@ -1,15 +1,11 @@
 import { DebugElement } from '@angular/core';
-import { ComponentFixture, TestBed, fakeAsync, tick, waitForAsync } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { TeaPage } from './tea.page';
 import { Tea } from '@app/models';
-import { AuthenticationService, SessionVaultService, TeaService } from '@app/core';
+import { TeaService } from '@app/core';
 import { NavController } from '@ionic/angular';
-import {
-  createAuthenticationServiceMock,
-  createSessionVaultServiceMock,
-  createTeaServiceMock,
-} from '@app/core/testing';
+import { createTeaServiceMock } from '@app/core/testing';
 import { createNavControllerMock } from '@test/mocks';
 import { of } from 'rxjs';
 
@@ -81,9 +77,7 @@ describe('TeaPage', () => {
     TestBed.configureTestingModule({
       imports: [TeaPage],
     })
-      .overrideProvider(AuthenticationService, { useFactory: createAuthenticationServiceMock })
       .overrideProvider(NavController, { useFactory: createNavControllerMock })
-      .overrideProvider(SessionVaultService, { useFactory: createSessionVaultServiceMock })
       .overrideProvider(TeaService, { useFactory: createTeaServiceMock })
       .compileComponents();
 
@@ -143,38 +137,6 @@ describe('TeaPage', () => {
         const title = col.query(By.css('ion-card-content'));
         expect(title.nativeElement.textContent.trim()).toBe(teas[idx].description);
       });
-    });
-  });
-
-  describe('logout button', () => {
-    describe('on click', () => {
-      beforeEach(() => {
-        const auth = TestBed.inject(AuthenticationService);
-        (auth.logout as jasmine.Spy).and.returnValue(of(undefined));
-      });
-
-      it('calls the logout', () => {
-        const auth = TestBed.inject(AuthenticationService);
-        const button = fixture.debugElement.query(By.css('[data-testid="logout-button"]')).nativeElement;
-        click(button);
-        expect(auth.logout).toHaveBeenCalledTimes(1);
-      });
-
-      it('clears the session', () => {
-        const button = fixture.debugElement.query(By.css('[data-testid="logout-button"]')).nativeElement;
-        const sessionVault = TestBed.inject(SessionVaultService);
-        click(button);
-        expect(sessionVault.clear).toHaveBeenCalledTimes(1);
-      });
-
-      it('navigates to the login page', fakeAsync(() => {
-        const button = fixture.debugElement.query(By.css('[data-testid="logout-button"]')).nativeElement;
-        const nav = TestBed.inject(NavController);
-        click(button);
-        tick();
-        expect(nav.navigateRoot).toHaveBeenCalledTimes(1);
-        expect(nav.navigateRoot).toHaveBeenCalledWith(['/', 'login']);
-      }));
     });
   });
 

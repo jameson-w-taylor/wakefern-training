@@ -1,17 +1,42 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { IonicModule } from '@ionic/angular';
+import { Component } from '@angular/core';
+import { IonicModule, NavController } from '@ionic/angular';
+import packageInfo from '../../../package.json';
+import { AuthenticationService, SessionVaultService } from '@app/core';
+import { tap } from 'rxjs';
 
 @Component({
   selector: 'app-about',
   templateUrl: './about.page.html',
   styleUrls: ['./about.page.scss'],
   standalone: true,
-  imports: [IonicModule, CommonModule, FormsModule],
+  imports: [IonicModule],
 })
-export class AboutPage implements OnInit {
-  constructor() {}
+export class AboutPage {
+  author: string;
+  name: string;
+  description: string;
+  version: string;
 
-  ngOnInit() {}
+  constructor(
+    private auth: AuthenticationService,
+    private nav: NavController,
+    private sessionVault: SessionVaultService
+  ) {
+    this.author = packageInfo.author;
+    this.name = packageInfo.name;
+    this.description = packageInfo.description;
+    this.version = packageInfo.version;
+  }
+
+  logout() {
+    this.auth
+      .logout()
+      .pipe(
+        tap(async () => {
+          await this.sessionVault.clear();
+          this.nav.navigateRoot(['/', 'login']);
+        })
+      )
+      .subscribe();
+  }
 }

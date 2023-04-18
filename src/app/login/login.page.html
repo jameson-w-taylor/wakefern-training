@@ -4,7 +4,7 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding">
+<ion-content class="ion-padding main-content">
   <form [formGroup]="loginForm">
     <ion-input
       id="email-input"
@@ -28,7 +28,7 @@
 </ion-content>
 
 <ion-footer>
-  <ion-toolbar>
+  <ion-toolbar color="secondary">
     <ion-button id="signin-button" expand="full" [disabled]="!loginForm.valid" (click)="signIn()">
       Sign In
       <ion-icon slot="end" name="log-in-outline"></ion-icon>

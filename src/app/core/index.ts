@@ -4,3 +4,4 @@ export * from './guards/auth.guard';
 export * from './interceptors/auth.interceptor';
 export * from './interceptors/unauth.interceptor';
 export * from './tea/tea.service';
+export * from './tasting-notes/tasting-notes.service';
